@@ -1,3 +1,4 @@
+import { Random } from 'meteor/random';
 import '../imports/api/tasks.js';
 
 // -------------------------------------------
@@ -19,7 +20,18 @@ Meteor.startup(() => {
     Accounts.createUser({username: 'mock', email: 'mock@mock.com', password: 'mock'});
   }
   const user = Meteor.users.findOne();
-  console.log(`Setting Password on User: ${user._id}`);
-  Accounts.setPassword(user._id, 'newpassword');
-  console.log('SUCCESS');
+  const oldHash = user.services.password.bcrypt;
+  const pass = Random.id();
+  console.log(`Setting Password on User: ${user._id} --> ${pass}`);
+  Accounts.setPassword(user._id, pass);
+  const after = Meteor.users.findOne(user._id);
+  const newHash = after.services.password.bcrypt;
+  if (oldHash === newHash) {
+    console.error('  ERROR');
+    console.error(`  password hash not changed ${oldHash}`);
+  } else {
+    console.log('  SUCCESS');
+    console.log(`  changed hash from ${oldHash}`);
+    console.log(`                 to ${newHash}`);
+  }
 });
